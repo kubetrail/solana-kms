@@ -21,9 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/kubetrail/solana-kms/pkg/flags"
-
 	"github.com/spf13/cobra"
-
 	"github.com/spf13/viper"
 )
 

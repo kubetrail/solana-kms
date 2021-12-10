@@ -20,7 +20,6 @@ import (
 
 	"github.com/kubetrail/solana-kms/pkg/flags"
 	"github.com/kubetrail/solana-kms/pkg/run"
-
 	"github.com/spf13/cobra"
 )
 
