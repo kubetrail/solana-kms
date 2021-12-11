@@ -29,24 +29,31 @@ func KeyPubkey(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(configFile) == 0 {
-		var err error
-		configFile, err = getDefaultConfigFilename()
+	if len(keyFile) == 0 {
+		if len(configFile) == 0 {
+			var err error
+			configFile, err = getDefaultConfigFilename()
+			if err != nil {
+				err := fmt.Errorf("could not get default config filename: %w", err)
+				return err
+			}
+		}
+
+		configValues, err := getConfigValues(configFile)
 		if err != nil {
-			err := fmt.Errorf("could not get default config filename: %w", err)
+			err := fmt.Errorf("could not get config values: %w", err)
 			return err
 		}
-	}
 
-	configValues, err := getConfigValues(configFile)
-	if err != nil {
-		err := fmt.Errorf("could not get config values: %w", err)
-		return err
-	}
+		if configValues == nil || len(configValues.KeypairPath) == 0 {
+			err := fmt.Errorf("could not find a valid keypair path from config file")
+			return err
+		}
 
-	if len(keyFile) == 0 {
 		keyFile = configValues.KeypairPath
 	}
+
+	keyFile = removeSchemeFromPath(keyFile)
 
 	kmsClient, err := kms.NewKeyManagementClient(ctx)
 	if err != nil {

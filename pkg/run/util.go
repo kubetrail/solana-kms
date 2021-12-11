@@ -5,6 +5,9 @@ import (
 	"hash/crc32"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/portto/solana-go-sdk/rpc"
 
 	"github.com/kubetrail/solana-kms/pkg/flags"
 	"github.com/spf13/cobra"
@@ -104,4 +107,25 @@ func setAppCredsEnvVar(applicationCredentials string) error {
 	}
 
 	return nil
+}
+
+func getEndpointFromUrlOrMoniker(url string, configValues *config) string {
+	switch strings.ToLower(url) {
+	case "mainnet":
+		return rpc.MainnetRPCEndpoint
+	case "devnet":
+		return rpc.DevnetRPCEndpoint
+	case "testnet":
+		return rpc.TestnetRPCEndpoint
+	case "localnet", "localhost":
+		return rpc.LocalnetRPCEndpoint
+	case "":
+		return configValues.JsonRpcUrl
+	default:
+		return url
+	}
+}
+
+func removeSchemeFromPath(input string) string {
+	return strings.TrimLeft(input, "stdin:")
 }

@@ -31,24 +31,31 @@ func KeyDecrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(configFile) == 0 {
-		var err error
-		configFile, err = getDefaultConfigFilename()
+	if len(keyFile) == 0 {
+		if len(configFile) == 0 {
+			var err error
+			configFile, err = getDefaultConfigFilename()
+			if err != nil {
+				err := fmt.Errorf("could not get default config filename: %w", err)
+				return err
+			}
+		}
+
+		configValues, err := getConfigValues(configFile)
 		if err != nil {
-			err := fmt.Errorf("could not get default config filename: %w", err)
+			err := fmt.Errorf("could not get config values: %w", err)
 			return err
 		}
-	}
 
-	configValues, err := getConfigValues(configFile)
-	if err != nil {
-		err := fmt.Errorf("could not get config values: %w", err)
-		return err
-	}
+		if configValues == nil || len(configValues.KeypairPath) == 0 {
+			err := fmt.Errorf("could not find a valid keypair path from config file")
+			return err
+		}
 
-	if len(keyFile) == 0 {
 		keyFile = configValues.KeypairPath
 	}
+
+	keyFile = removeSchemeFromPath(keyFile)
 
 	kmsClient, err := kms.NewKeyManagementClient(ctx)
 	if err != nil {
@@ -89,11 +96,6 @@ func KeyDecrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(cmd.OutOrStdout(), "Public key: %s\n", account.PublicKey); err != nil {
-		err := fmt.Errorf("could not print public key to cmd stdout: %w", err)
-		return err
-	}
-
 	keyValues := make([]int, len(account.PrivateKey))
 	for i, value := range account.PrivateKey {
 		keyValues[i] = int(value)
@@ -105,7 +107,7 @@ func KeyDecrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(cmd.OutOrStdout(), "Private key: %s\n", string(jb)); err != nil {
+	if _, err := fmt.Fprintf(cmd.OutOrStdout(), "%s\n", string(jb)); err != nil {
 		err := fmt.Errorf("could not print private key to cmd stdout: %w", err)
 		return err
 	}

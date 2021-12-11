@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/kubetrail/solana-kms/pkg/flags"
 	"github.com/portto/solana-go-sdk/client"
-	"github.com/portto/solana-go-sdk/rpc"
 	"github.com/portto/solana-go-sdk/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +33,7 @@ func AccountBalance(cmd *cobra.Command, _ []string) error {
 	var endpoint string
 	var configValues *config
 
-	if len(pubKey) == 0 || len(url) == 0 {
+	if (len(pubKey) == 0 && len(keyFile) == 0) || len(url) == 0 {
 		var err error
 		if len(configFile) == 0 {
 			configFile, err = getDefaultConfigFilename()
@@ -52,20 +50,7 @@ func AccountBalance(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	switch strings.ToLower(url) {
-	case "mainnet":
-		endpoint = rpc.MainnetRPCEndpoint
-	case "devnet":
-		endpoint = rpc.DevnetRPCEndpoint
-	case "testnet":
-		endpoint = rpc.TestnetRPCEndpoint
-	case "localnet", "localhost":
-		endpoint = rpc.LocalnetRPCEndpoint
-	case "":
-		endpoint = configValues.JsonRpcUrl
-	default:
-		endpoint = url
-	}
+	endpoint = getEndpointFromUrlOrMoniker(url, configValues)
 
 	if len(pubKey) == 0 {
 		if err := setAppCredsEnvVar(persistentFlags.ApplicationCredentials); err != nil {
@@ -74,8 +59,14 @@ func AccountBalance(cmd *cobra.Command, _ []string) error {
 		}
 
 		if len(keyFile) == 0 {
+			if configValues == nil || len(configValues.KeypairPath) == 0 {
+				err := fmt.Errorf("could not find a valid keypair path from config file")
+				return err
+			}
 			keyFile = configValues.KeypairPath
 		}
+
+		keyFile = removeSchemeFromPath(keyFile)
 
 		kmsClient, err := kms.NewKeyManagementClient(ctx)
 		if err != nil {
