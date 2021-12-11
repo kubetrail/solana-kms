@@ -9,4 +9,6 @@ const (
 	Config                 = "config"                  // Solana config file
 	KeyFile                = "keyfile"                 // Solana private keypair file
 	SeedFile               = "seedfile"                // Seedfile associated with private keypair
+	PubKey                 = "pubkey"                  // Public key aka Solana address
+	Url                    = "url"                     // Solana validator endpoint
 )

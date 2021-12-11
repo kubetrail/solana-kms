@@ -59,7 +59,15 @@ func getKmsName(projectId, kmsLocation, keyringName, keyName string) string {
 	)
 }
 
-func bindPersistentFlags(cmd *cobra.Command) {
+type persistentFlagValues struct {
+	ApplicationCredentials string `json:"applicationCredentials,omitempty"`
+	Project                string `json:"project,omitempty"`
+	Location               string `json:"location,omitempty"`
+	Keyring                string `json:"keyring,omitempty"`
+	Key                    string `json:"key,omitempty"`
+}
+
+func getPersistentFlags(cmd *cobra.Command) persistentFlagValues {
 	_ = viper.BindPFlag(flags.Config, cmd.PersistentFlags().Lookup(filepath.Base(flags.Config)))
 	_ = viper.BindPFlag(flags.Project, cmd.PersistentFlags().Lookup(filepath.Base(flags.Project)))
 	_ = viper.BindPFlag(flags.Location, cmd.PersistentFlags().Lookup(filepath.Base(flags.Location)))
@@ -71,6 +79,20 @@ func bindPersistentFlags(cmd *cobra.Command) {
 	_ = viper.BindEnv(flags.Location, "LOCATION")
 	_ = viper.BindEnv(flags.Keyring, "KEYRING")
 	_ = viper.BindEnv(flags.Key, "KEY")
+
+	applicationCredentials := viper.GetString(flags.ApplicationCredentials)
+	project := viper.GetString(flags.Project)
+	location := viper.GetString(flags.Location)
+	keyring := viper.GetString(flags.Keyring)
+	key := viper.GetString(flags.Key)
+
+	return persistentFlagValues{
+		ApplicationCredentials: applicationCredentials,
+		Project:                project,
+		Location:               location,
+		Keyring:                keyring,
+		Key:                    key,
+	}
 }
 
 func setAppCredsEnvVar(applicationCredentials string) error {

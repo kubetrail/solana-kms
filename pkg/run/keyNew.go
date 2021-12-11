@@ -23,7 +23,7 @@ import (
 // data with .seed extension
 func KeyNew(cmd *cobra.Command, _ []string) error {
 	ctx := cmd.Context()
-	bindPersistentFlags(cmd)
+	persistentFlags := getPersistentFlags(cmd)
 
 	_ = viper.BindPFlag(flags.KeyFile, cmd.Flags().Lookup(filepath.Base(flags.KeyFile)))
 	_ = viper.BindPFlag(flags.SeedFile, cmd.Flags().Lookup(filepath.Base(flags.SeedFile)))
@@ -32,13 +32,7 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 	keyFile := viper.GetString(flags.KeyFile)
 	seedFile := viper.GetString(flags.SeedFile)
 
-	applicationCredentials := viper.GetString(flags.ApplicationCredentials)
-	project := viper.GetString(flags.Project)
-	location := viper.GetString(flags.Location)
-	keyring := viper.GetString(flags.Keyring)
-	key := viper.GetString(flags.Key)
-
-	if err := setAppCredsEnvVar(applicationCredentials); err != nil {
+	if err := setAppCredsEnvVar(persistentFlags.ApplicationCredentials); err != nil {
 		err := fmt.Errorf("could not set Google Application credentials env. var: %w", err)
 		return err
 	}
@@ -84,10 +78,10 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 			ctx,
 			&kms2.DecryptRequest{
 				Name: getKmsName(
-					project,
-					location,
-					keyring,
-					key,
+					persistentFlags.Project,
+					persistentFlags.Location,
+					persistentFlags.Keyring,
+					persistentFlags.Key,
 				),
 				Ciphertext:                        ciphertext,
 				AdditionalAuthenticatedData:       nil,
@@ -118,10 +112,10 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 		ctx,
 		&kms2.EncryptRequest{
 			Name: getKmsName(
-				project,
-				location,
-				keyring,
-				key,
+				persistentFlags.Project,
+				persistentFlags.Location,
+				persistentFlags.Keyring,
+				persistentFlags.Key,
 			),
 			Plaintext:                         account.PrivateKey,
 			AdditionalAuthenticatedData:       nil,
@@ -138,10 +132,10 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 		ctx,
 		&kms2.EncryptRequest{
 			Name: getKmsName(
-				project,
-				location,
-				keyring,
-				key,
+				persistentFlags.Project,
+				persistentFlags.Location,
+				persistentFlags.Keyring,
+				persistentFlags.Key,
 			),
 			Plaintext:                         account.PrivateKey.Seed(),
 			AdditionalAuthenticatedData:       nil,

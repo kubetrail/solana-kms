@@ -16,21 +16,27 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	"path/filepath"
 
+	"github.com/kubetrail/solana-kms/pkg/flags"
+	"github.com/kubetrail/solana-kms/pkg/run"
 	"github.com/spf13/cobra"
 )
 
-// keyCmd represents the key command
-var keyCmd = &cobra.Command{
-	Use:   "key",
-	Short: "Key related subcommands",
-	Long:  `Generate a new keypair and/or perform other key related activities`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("pl. use with a subcommand")
-	},
+// accountInfoCmd represents the accountInfo command
+var accountInfoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Get account information",
+	Long:  `This command finds account information`,
+	RunE:  run.AccountInfo,
 }
 
 func init() {
-	rootCmd.AddCommand(keyCmd)
+	accountCmd.AddCommand(accountInfoCmd)
+	f := accountInfoCmd.Flags()
+	b := filepath.Base
+
+	f.String(b(flags.KeyFile), "", "Keypair file")
+	f.String(b(flags.PubKey), "", "Public key (--keyfile will be ignored)")
+	f.String(b(flags.Url), "", "Solana validator endpoint (--keyfile will be ignored)")
 }

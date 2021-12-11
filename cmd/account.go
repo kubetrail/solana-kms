@@ -21,16 +21,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// keyCmd represents the key command
-var keyCmd = &cobra.Command{
-	Use:   "key",
-	Short: "Key related subcommands",
-	Long:  `Generate a new keypair and/or perform other key related activities`,
+// accountCmd represents the account command
+var accountCmd = &cobra.Command{
+	Use:   "account",
+	Short: "Account related subcommands",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("pl. use with a subcommand")
+		fmt.Println("pl. use a subcommand")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(keyCmd)
+	rootCmd.AddCommand(accountCmd)
 }

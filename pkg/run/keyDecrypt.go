@@ -19,20 +19,14 @@ import (
 // of public key and the private key.
 func KeyDecrypt(cmd *cobra.Command, _ []string) error {
 	ctx := cmd.Context()
-	bindPersistentFlags(cmd)
+	persistentFlags := getPersistentFlags(cmd)
 
 	_ = viper.BindPFlag(flags.KeyFile, cmd.Flags().Lookup(filepath.Base(flags.KeyFile)))
 
 	configFile := viper.GetString(flags.Config)
 	keyFile := viper.GetString(flags.KeyFile)
 
-	applicationCredentials := viper.GetString(flags.ApplicationCredentials)
-	projectId := viper.GetString(flags.Project)
-	location := viper.GetString(flags.Location)
-	keyring := viper.GetString(flags.Keyring)
-	key := viper.GetString(flags.Key)
-
-	if err := setAppCredsEnvVar(applicationCredentials); err != nil {
+	if err := setAppCredsEnvVar(persistentFlags.ApplicationCredentials); err != nil {
 		err := fmt.Errorf("could not set Google Application credentials env. var: %w", err)
 		return err
 	}
@@ -73,10 +67,10 @@ func KeyDecrypt(cmd *cobra.Command, _ []string) error {
 		ctx,
 		&kms2.DecryptRequest{
 			Name: getKmsName(
-				projectId,
-				location,
-				keyring,
-				key,
+				persistentFlags.Project,
+				persistentFlags.Location,
+				persistentFlags.Keyring,
+				persistentFlags.Key,
 			),
 			Ciphertext:                        ciphertext,
 			AdditionalAuthenticatedData:       nil,
