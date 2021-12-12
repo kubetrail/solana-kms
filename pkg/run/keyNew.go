@@ -188,9 +188,7 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(seedFile) == 0 {
-		seedFile = fmt.Sprintf("%s.%s", keyFile, "seed")
-	}
+	seedFile = fmt.Sprintf("%s.%s", keyFile, "seed")
 	if err := os.WriteFile(seedFile, encryptResponseSeed.Ciphertext, 0400); err != nil {
 		err := fmt.Errorf("could not write encrypted private key seed to outfile: %w", err)
 		return err
