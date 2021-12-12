@@ -97,3 +97,7 @@ key version that was used for encryption of those old keypair files,
 but is no longer in use, can also be disabled. In other words, we are not rotating
 the Solana keys, the roation implies to the encrypted content using different
 versions of the KMS keys.
+
+## Security Concerns
+* https://unix.stackexchange.com/questions/156859/is-the-data-transiting-through-a-pipe-confidential
+
