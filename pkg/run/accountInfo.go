@@ -25,7 +25,6 @@ func AccountInfo(cmd *cobra.Command, _ []string) error {
 	_ = viper.BindPFlag(flags.PubKey, cmd.Flags().Lookup(filepath.Base(flags.PubKey)))
 	_ = viper.BindPFlag(flags.Url, cmd.Flags().Lookup(filepath.Base(flags.Url)))
 
-	configFile := viper.GetString(flags.Config)
 	keyFile := viper.GetString(flags.KeyFile)
 	pubKey := viper.GetString(flags.PubKey)
 	url := viper.GetString(flags.Url)
@@ -35,15 +34,15 @@ func AccountInfo(cmd *cobra.Command, _ []string) error {
 
 	if (len(pubKey) == 0 && len(keyFile) == 0) || len(url) == 0 {
 		var err error
-		if len(configFile) == 0 {
-			configFile, err = getDefaultConfigFilename()
+		if len(persistentFlags.ConfigFile) == 0 {
+			persistentFlags.ConfigFile, err = getDefaultConfigFilename()
 			if err != nil {
 				err := fmt.Errorf("could not get default config filename: %w", err)
 				return err
 			}
 		}
 
-		configValues, err = getConfigValues(configFile)
+		configValues, err = getConfigValues(persistentFlags.ConfigFile)
 		if err != nil {
 			err := fmt.Errorf("could not get config values: %w", err)
 			return err

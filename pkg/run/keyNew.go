@@ -28,7 +28,6 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 	_ = viper.BindPFlag(flags.KeyFile, cmd.Flags().Lookup(filepath.Base(flags.KeyFile)))
 	_ = viper.BindPFlag(flags.SeedFile, cmd.Flags().Lookup(filepath.Base(flags.SeedFile)))
 
-	configFile := viper.GetString(flags.Config)
 	keyFile := viper.GetString(flags.KeyFile)
 	seedFile := viper.GetString(flags.SeedFile)
 
@@ -38,16 +37,16 @@ func KeyNew(cmd *cobra.Command, _ []string) error {
 	}
 
 	if len(keyFile) == 0 {
-		if len(configFile) == 0 {
+		if len(persistentFlags.ConfigFile) == 0 {
 			var err error
-			configFile, err = getDefaultConfigFilename()
+			persistentFlags.ConfigFile, err = getDefaultConfigFilename()
 			if err != nil {
 				err := fmt.Errorf("could not get default config filename: %w", err)
 				return err
 			}
 		}
 
-		configValues, err := getConfigValues(configFile)
+		configValues, err := getConfigValues(persistentFlags.ConfigFile)
 		if err != nil {
 			err := fmt.Errorf("could not get config values: %w", err)
 			return err

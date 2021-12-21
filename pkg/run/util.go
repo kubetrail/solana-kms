@@ -63,6 +63,7 @@ func getKmsName(projectId, kmsLocation, keyringName, keyName string) string {
 }
 
 type persistentFlagValues struct {
+	ConfigFile             string `json:"configFile,omitempty"`
 	ApplicationCredentials string `json:"applicationCredentials,omitempty"`
 	Project                string `json:"project,omitempty"`
 	Location               string `json:"location,omitempty"`
@@ -71,18 +72,22 @@ type persistentFlagValues struct {
 }
 
 func getPersistentFlags(cmd *cobra.Command) persistentFlagValues {
-	_ = viper.BindPFlag(flags.Config, cmd.PersistentFlags().Lookup(filepath.Base(flags.Config)))
-	_ = viper.BindPFlag(flags.Project, cmd.PersistentFlags().Lookup(filepath.Base(flags.Project)))
-	_ = viper.BindPFlag(flags.Location, cmd.PersistentFlags().Lookup(filepath.Base(flags.Location)))
-	_ = viper.BindPFlag(flags.Keyring, cmd.PersistentFlags().Lookup(filepath.Base(flags.Keyring)))
-	_ = viper.BindPFlag(flags.Key, cmd.PersistentFlags().Lookup(filepath.Base(flags.Key)))
-	_ = viper.BindPFlag(flags.ApplicationCredentials, cmd.PersistentFlags().Lookup(filepath.Base(flags.ApplicationCredentials)))
+	rootCmd := cmd.Root().PersistentFlags()
+	b := filepath.Base
+
+	_ = viper.BindPFlag(flags.Config, rootCmd.Lookup(b(flags.Config)))
+	_ = viper.BindPFlag(flags.Project, rootCmd.Lookup(b(flags.Project)))
+	_ = viper.BindPFlag(flags.Location, rootCmd.Lookup(b(flags.Location)))
+	_ = viper.BindPFlag(flags.Keyring, rootCmd.Lookup(b(flags.Keyring)))
+	_ = viper.BindPFlag(flags.Key, rootCmd.Lookup(b(flags.Key)))
+	_ = viper.BindPFlag(flags.ApplicationCredentials, rootCmd.Lookup(b(flags.ApplicationCredentials)))
 
 	_ = viper.BindEnv(flags.Project, "PROJECT")
 	_ = viper.BindEnv(flags.Location, "LOCATION")
 	_ = viper.BindEnv(flags.Keyring, "KEYRING")
 	_ = viper.BindEnv(flags.Key, "KEY")
 
+	configFile := viper.GetString(flags.Config)
 	applicationCredentials := viper.GetString(flags.ApplicationCredentials)
 	project := viper.GetString(flags.Project)
 	location := viper.GetString(flags.Location)
@@ -90,6 +95,7 @@ func getPersistentFlags(cmd *cobra.Command) persistentFlagValues {
 	key := viper.GetString(flags.Key)
 
 	return persistentFlagValues{
+		ConfigFile:             configFile,
 		ApplicationCredentials: applicationCredentials,
 		Project:                project,
 		Location:               location,
@@ -111,7 +117,7 @@ func setAppCredsEnvVar(applicationCredentials string) error {
 
 func getEndpointFromUrlOrMoniker(url string, configValues *config) string {
 	switch strings.ToLower(url) {
-	case "mainnet":
+	case "mainnet", "mainnet-beta":
 		return rpc.MainnetRPCEndpoint
 	case "devnet":
 		return rpc.DevnetRPCEndpoint
