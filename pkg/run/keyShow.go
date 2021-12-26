@@ -1,6 +1,7 @@
 package run
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,14 +15,17 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// KeyPubkey fetches public key from the encrypted private keypair file
-func KeyPubkey(cmd *cobra.Command, _ []string) error {
+// KeyShow decrypts KMS encrypted private keypair file and prints on screen the values
+// of public key and the private key.
+func KeyShow(cmd *cobra.Command, _ []string) error {
 	ctx := cmd.Context()
 	persistentFlags := getPersistentFlags(cmd)
 
 	_ = viper.BindPFlag(flags.KeyFile, cmd.Flags().Lookup(filepath.Base(flags.KeyFile)))
+	_ = viper.BindPFlag(flags.PubKey, cmd.Flags().Lookup(filepath.Base(flags.PubKey)))
 
 	keyFile := viper.GetString(flags.KeyFile)
+	pubKey := viper.GetBool(flags.PubKey)
 
 	if err := setAppCredsEnvVar(persistentFlags.ApplicationCredentials); err != nil {
 		err := fmt.Errorf("could not set Google Application credentials env. var: %w", err)
@@ -67,34 +71,61 @@ func KeyPubkey(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	decryptResponse, err := kmsClient.Decrypt(
-		ctx,
-		&kms2.DecryptRequest{
-			Name: getKmsName(
-				persistentFlags.Project,
-				persistentFlags.Location,
-				persistentFlags.Keyring,
-				persistentFlags.Key,
-			),
-			Ciphertext:                        ciphertext,
-			AdditionalAuthenticatedData:       nil,
-			CiphertextCrc32C:                  wrapperspb.Int64(int64(crc32Sum(ciphertext))),
-			AdditionalAuthenticatedDataCrc32C: nil,
-		},
-	)
+	var key []byte
+	// try json parsing first and if it fails assume input to be
+	// encrypted
+	if err := json.Unmarshal(ciphertext, &key); err != nil {
+		decryptResponse, err := kmsClient.Decrypt(
+			ctx,
+			&kms2.DecryptRequest{
+				Name: getKmsName(
+					persistentFlags.Project,
+					persistentFlags.Location,
+					persistentFlags.Keyring,
+					persistentFlags.Key,
+				),
+				Ciphertext:                        ciphertext,
+				AdditionalAuthenticatedData:       nil,
+				CiphertextCrc32C:                  wrapperspb.Int64(int64(crc32Sum(ciphertext))),
+				AdditionalAuthenticatedDataCrc32C: nil,
+			},
+		)
+		if err != nil {
+			err := fmt.Errorf("could not decrypt private key: %w", err)
+			return err
+		}
+
+		key = decryptResponse.Plaintext
+	}
+
+	account, err := types.AccountFromBytes(key)
 	if err != nil {
-		err := fmt.Errorf("could not decrypt private key: %w", err)
+		err := fmt.Errorf("could not create key pair from decrypted data: %w", err)
 		return err
 	}
 
-	account, err := types.AccountFromBytes(decryptResponse.Plaintext)
+	if pubKey {
+		if _, err := fmt.Fprintln(cmd.OutOrStdout(), account.PublicKey.ToBase58()); err != nil {
+			err := fmt.Errorf("could not write to cmd output: %w", err)
+			return err
+		}
+
+		return nil
+	}
+
+	keyValues := make([]int, len(account.PrivateKey))
+	for i, value := range account.PrivateKey {
+		keyValues[i] = int(value)
+	}
+
+	jb, err := json.Marshal(keyValues)
 	if err != nil {
-		err := fmt.Errorf("could not create account from data: %w", err)
+		err := fmt.Errorf("could not serialize private key for displaying as array: %w", err)
 		return err
 	}
 
-	if _, err := fmt.Fprintln(cmd.OutOrStdout(), account.PublicKey.ToBase58()); err != nil {
-		err := fmt.Errorf("could not write to cmd output: %w", err)
+	if _, err := fmt.Fprintf(cmd.OutOrStdout(), "%s\n", string(jb)); err != nil {
+		err := fmt.Errorf("could not print private key to cmd stdout: %w", err)
 		return err
 	}
 

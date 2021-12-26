@@ -51,13 +51,13 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	f.String(b(flags.Project), "", "Google project ID (Env: PROJECT)")
-	f.String(b(flags.ApplicationCredentials), "", "Google app credentials (Env: GOOGLE_APPLICATION_CREDENTIALS)")
-	f.String(b(flags.Location), "global", "KMS location (Env: LOCATION)")
-	f.String(b(flags.Keyring), "", "KMS keyring name (Env: KEYRING)")
-	f.String(b(flags.Key), "", "KMS key name (Env: KEY)")
+	f.String(b(flags.GoogleProjectID), "", "Google project ID (Env: GOOGLE_PROJECT_ID)")
+	f.String(b(flags.GoogleApplicationCredentials), "", "Google app credentials (Env: GOOGLE_APPLICATION_CREDENTIALS)")
+	f.String(b(flags.KmsLocation), "global", "KMS location (Env: KMS_LOCATION)")
+	f.String(b(flags.KmsKeyring), "", "KMS keyring name (Env: KMS_KEYRING)")
+	f.String(b(flags.KmsKey), "", "KMS key name (Env: KMS_KEY)")
 
-	f.String(b(flags.Config), "", "Solana config file")
+	f.String(b(flags.Config), "", "Solana config file (Env: SOLANA_CONFIG)")
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -23,24 +23,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// keyPubkeyCmd represents the keyPubkey command
-var keyPubkeyCmd = &cobra.Command{
-	Use:   "pubkey",
-	Short: "Get public key from KMS encrypted keypair",
-	Long: `This command fetches public key associated with the private key.
-
-Assuming you have generated a keypair at /tmp/key, the public key can be obtained
-as follows:
-
-solana-kms key pubkey --keyfile=/tmp/key
-`,
-	RunE: run.KeyPubkey,
+// keyShowCmd represents the keyDecrypt command
+var keyShowCmd = &cobra.Command{
+	Use:   "show",
+	Short: "Show Solana KMS private key",
+	Long: `This command shows JSON formatted private key after
+decrypting the keypair file as necessary.`,
+	RunE: run.KeyShow,
 }
 
 func init() {
-	keyCmd.AddCommand(keyPubkeyCmd)
-	f := keyPubkeyCmd.Flags()
+	keyCmd.AddCommand(keyShowCmd)
+	f := keyShowCmd.Flags()
 	b := filepath.Base
 
 	f.String(b(flags.KeyFile), "", "Input key file")
+	f.Bool(b(flags.PubKey), false, "Display public key")
 }

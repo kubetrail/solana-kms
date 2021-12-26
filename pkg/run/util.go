@@ -7,12 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/portto/solana-go-sdk/rpc"
-
 	"github.com/kubetrail/solana-kms/pkg/flags"
+	"github.com/portto/solana-go-sdk/rpc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	"sigs.k8s.io/yaml"
 )
 
@@ -76,23 +74,24 @@ func getPersistentFlags(cmd *cobra.Command) persistentFlagValues {
 	b := filepath.Base
 
 	_ = viper.BindPFlag(flags.Config, rootCmd.Lookup(b(flags.Config)))
-	_ = viper.BindPFlag(flags.Project, rootCmd.Lookup(b(flags.Project)))
-	_ = viper.BindPFlag(flags.Location, rootCmd.Lookup(b(flags.Location)))
-	_ = viper.BindPFlag(flags.Keyring, rootCmd.Lookup(b(flags.Keyring)))
-	_ = viper.BindPFlag(flags.Key, rootCmd.Lookup(b(flags.Key)))
-	_ = viper.BindPFlag(flags.ApplicationCredentials, rootCmd.Lookup(b(flags.ApplicationCredentials)))
+	_ = viper.BindPFlag(flags.GoogleProjectID, rootCmd.Lookup(b(flags.GoogleProjectID)))
+	_ = viper.BindPFlag(flags.KmsLocation, rootCmd.Lookup(b(flags.KmsLocation)))
+	_ = viper.BindPFlag(flags.KmsKeyring, rootCmd.Lookup(b(flags.KmsKeyring)))
+	_ = viper.BindPFlag(flags.KmsKey, rootCmd.Lookup(b(flags.KmsKey)))
+	_ = viper.BindPFlag(flags.GoogleApplicationCredentials, rootCmd.Lookup(b(flags.GoogleApplicationCredentials)))
 
-	_ = viper.BindEnv(flags.Project, "PROJECT")
-	_ = viper.BindEnv(flags.Location, "LOCATION")
-	_ = viper.BindEnv(flags.Keyring, "KEYRING")
-	_ = viper.BindEnv(flags.Key, "KEY")
+	_ = viper.BindEnv(flags.Config, "SOLANA_CONFIG")
+	_ = viper.BindEnv(flags.GoogleProjectID, "GOOGLE_PROJECT_ID")
+	_ = viper.BindEnv(flags.KmsLocation, "KMS_LOCATION")
+	_ = viper.BindEnv(flags.KmsKeyring, "KMS_KEYRING")
+	_ = viper.BindEnv(flags.KmsKey, "KMS_KEY")
 
 	configFile := viper.GetString(flags.Config)
-	applicationCredentials := viper.GetString(flags.ApplicationCredentials)
-	project := viper.GetString(flags.Project)
-	location := viper.GetString(flags.Location)
-	keyring := viper.GetString(flags.Keyring)
-	key := viper.GetString(flags.Key)
+	applicationCredentials := viper.GetString(flags.GoogleApplicationCredentials)
+	project := viper.GetString(flags.GoogleProjectID)
+	location := viper.GetString(flags.KmsLocation)
+	keyring := viper.GetString(flags.KmsKeyring)
+	key := viper.GetString(flags.KmsKey)
 
 	return persistentFlagValues{
 		ConfigFile:             configFile,

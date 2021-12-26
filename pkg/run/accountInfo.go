@@ -80,27 +80,34 @@ func AccountInfo(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		decryptResponse, err := kmsClient.Decrypt(
-			ctx,
-			&kms2.DecryptRequest{
-				Name: getKmsName(
-					persistentFlags.Project,
-					persistentFlags.Location,
-					persistentFlags.Keyring,
-					persistentFlags.Key,
-				),
-				Ciphertext:                        ciphertext,
-				AdditionalAuthenticatedData:       nil,
-				CiphertextCrc32C:                  wrapperspb.Int64(int64(crc32Sum(ciphertext))),
-				AdditionalAuthenticatedDataCrc32C: nil,
-			},
-		)
-		if err != nil {
-			err := fmt.Errorf("could not decrypt private key: %w", err)
-			return err
+		var key []byte
+		// try json parsing first and if it fails assume input to be
+		// encrypted
+		if err := json.Unmarshal(ciphertext, &key); err != nil {
+			decryptResponse, err := kmsClient.Decrypt(
+				ctx,
+				&kms2.DecryptRequest{
+					Name: getKmsName(
+						persistentFlags.Project,
+						persistentFlags.Location,
+						persistentFlags.Keyring,
+						persistentFlags.Key,
+					),
+					Ciphertext:                        ciphertext,
+					AdditionalAuthenticatedData:       nil,
+					CiphertextCrc32C:                  wrapperspb.Int64(int64(crc32Sum(ciphertext))),
+					AdditionalAuthenticatedDataCrc32C: nil,
+				},
+			)
+			if err != nil {
+				err := fmt.Errorf("could not decrypt private key: %w", err)
+				return err
+			}
+
+			key = decryptResponse.Plaintext
 		}
 
-		account, err := types.AccountFromBytes(decryptResponse.Plaintext)
+		account, err := types.AccountFromBytes(key)
 		if err != nil {
 			err := fmt.Errorf("could not create account from data: %w", err)
 			return err

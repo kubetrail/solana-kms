@@ -40,11 +40,19 @@ you will also need a service account with KMS encrypter/decrypter role. Setup fo
 environment variables:
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="${HOME}/.config/service-accounts/service-account.json"
-export LOCATION=<kms location>
-export KEYRING=<keyring name>
-export KEY=<key name>
-export PROJECT=<project id>
+export KMS_LOCATION=<kms location>
+export KMS_KEYRING=<keyring name>
+export KMS_KEY=<key name>
+export GOOGLE_PROJECT_ID=<project id>
 ```
+
+Optionally also set `SOLANA_CONFIG` to a config file other than the default
+Solana config
+```bash
+export SOLANA_CONFIG="${HOME}/.config/solana/cli/other-config-file.yaml"
+```
+
+If `SOLANA_CONFIG` is not set, it defaults to `${HOME}/.config/solana/cli/config.yml`
 
 ## Usage
 ### Create a new key
@@ -61,17 +69,17 @@ The key can now be used with other Solana CLI tools by piping via STDIN. You can
 that is working by fetching public key address from `solana-kms` directly or via
 `solana-keygen` CLI as shown below:
 ```
-└─ $ ▶ solana-kms key pubkey 
+└─ $ ▶ solana-kms key show --pubkey 
 B9g4B79PHmyCcRQnuAxmzXK1PriVGqmxT7wo4DT7QRUP
 ```
 ```
-└─ $ ▶ solana-kms key decrypt | solana-keygen pubkey
+└─ $ ▶ solana-kms key show | solana-keygen pubkey
 B9g4B79PHmyCcRQnuAxmzXK1PriVGqmxT7wo4DT7QRUP
 ```
 Similarly, this setup can be used against all Solana CLI tools that support
 keypair input via STDIN
 ```
-└─ $ ▶ solana-kms key decrypt | solana airdrop 100 
+└─ $ ▶ solana-kms key show | solana airdrop 100 
 Requesting airdrop of 100 SOL
 
 Signature: 5Z8s3BUStxym3NyXT7zE2fxpgVi6VnL66F78ZyMkr6DdQ1v65ZgsW74xT2oJrDuv1kvGwfp8tjYiSvNdEDfSMgxm
@@ -80,9 +88,13 @@ Signature: 5Z8s3BUStxym3NyXT7zE2fxpgVi6VnL66F78ZyMkr6DdQ1v65ZgsW74xT2oJrDuv1kvGw
 ```
 
 ```
-└─ $ ▶ solana-kms key decrypt | solana balance
+└─ $ ▶ solana-kms key show | solana balance
 100 SOL
 ```
+
+> `solana-kms key show` command works the same regardless of private key set as
+> non encrypted JSON (Solana default format for file wallet), or KMS encrypted 
+> ciphertext
 
 ## Key Rotation
 It is possible to regenerate the keypair from the seed. The newly created ecrypted
@@ -97,6 +109,13 @@ key version that was used for encryption of those old keypair files,
 but is no longer in use, can also be disabled. In other words, we are not rotating
 the Solana keys, the roation implies to the encrypted content using different
 versions of the KMS keys.
+
+## Generating spl token
+To generate a new SPL token we have to not only pass the private key via STDIN but
+also pass `mint-authority` value as the public key:
+```bash
+└─ $ ▶ solana-kms key show | spl-token create-token --mint-authority $(solana-kms key show --pubkey)
+```
 
 ## Security Concerns
 * https://unix.stackexchange.com/questions/156859/is-the-data-transiting-through-a-pipe-confidential
